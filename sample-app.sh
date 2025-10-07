@@ -21,9 +21,10 @@ _EOF_
 
 cd tempdir || exit
 
-if docker image inspect sampleapp >/dev/null 2>&1; then
-    docker stop samplerunning
-    docker rm samplerunning
+if docker ps -a --format '{{.Names}}' | grep -q '^samplerunning$'; then
+    echo "Stopping existing container..."
+    docker stop samplerunning >/dev/null
+    docker rm samplerunning >/dev/null
 fi
 docker build -t sampleapp .
 docker run -t -d -p 5050:5050 --name samplerunning sampleapp
