@@ -1,27 +1,44 @@
 properties([
     pipelineTriggers([
         githubPush()
-        pollSCM('H/1 * * * *')
     ])
 ])
 
-node {
-    stage('Checkout') {
-        checkout scm
+pipeline {
+    agent any
+    
+    triggers {
+        pollSCM('* * * * *')  // Every minute
     }
-
-    stage('Preparation') {
-        catchError(buildResult: 'SUCCESS') {
-            sh 'docker stop samplerunning || true'
-            sh 'docker rm samplerunning || true'
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-    }
 
-    stage('Build') {
-        build 'BuildSampleApp'
-    }
+        stage('Preparation') {
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS') {
+                        sh 'docker stop samplerunning || true'
+                        sh 'docker rm samplerunning || true'
+                    }
+                }
+            }
+        }
 
-    stage('Results') {
-        build 'TestSampleApp'
+        stage('Build') {
+            steps {
+                build 'BuildSampleApp'
+            }
+        }
+
+        stage('Results') {
+            steps {
+                build 'TestSampleApp'
+            }
+        }
     }
 }
