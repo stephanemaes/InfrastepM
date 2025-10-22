@@ -1,57 +1,22 @@
-pipeline {
-    agent any
+properties([
+    pipelineTriggers([
+        githubPush()
+    ])
+])
 
-    triggers {
-    githubPush()
-}
-
-    environment {
-        APP_NAME = 'samplerunning'
-        IMAGE_NAME = 'sampleapp:latest'
-    }
-
-    stages {
-        stage('Cleanup') {
-            steps {
-                script {
-                    catchError(buildResult: 'SUCCESS') {
-                        sh """
-                        docker stop ${APP_NAME} || true
-                        docker rm ${APP_NAME} || true
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Building Docker image...'
-                sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Testing image...'
-                sh "docker run --rm ${IMAGE_NAME} npm test || true"
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying container...'
-                sh "docker run -d --name ${APP_NAME} -p 8080:80 ${IMAGE_NAME}"
-            }
+node {
+    stage('Preparation') {
+        catchError(buildResult: 'SUCCESS') {
+            sh 'docker stop samplerunning || true'
+            sh 'docker rm samplerunning || true'
         }
     }
 
-    post {
-        success {
-            echo '✅ Deployment successful!'
-        }
-        failure {
-            echo '❌ Deployment failed!'
-        }
+    stage('Build') {
+        build 'BuildSampleApp'
+    }
+
+    stage('Results') {
+        build 'TestSampleApp'
     }
 }
