@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     triggers {
-        pollSCM('H/5 * * * *') // or use GitHub webhook
-    }
+    githubPush()
+}
 
     environment {
         APP_NAME = 'samplerunning'
