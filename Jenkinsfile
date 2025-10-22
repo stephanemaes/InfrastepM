@@ -1,6 +1,7 @@
 properties([
     pipelineTriggers([
         githubPush()
+        pollSCM('H/1 * * * *')
     ])
 ])
 
